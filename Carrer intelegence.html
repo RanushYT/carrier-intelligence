@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Intelligence Dashboard | Empirical Research</title>
+    <!-- Chart.js loaded synchronously -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Core Variables (Dark Theme Default) --- */
+        :root {
+            --bg-main: #000000;
+            --bg-card: #0d0d0d;
+            --border-dim: #333333;
+            --border-glow: rgba(0, 240, 255, 0.5);
+            --neon-blue: #00f0ff;
+            --neon-purple: #c084fc; 
+            --text-primary: #ffffff; 
+            --text-secondary: #cbd5e1; 
+            --danger: #ff4d4d;
+            --success: #00ff66;
+            --warning: #ffb700;
+            --nav-bg: rgba(0, 0, 0, 0.9);
+            --nav-height: 75px;
+            --card-shadow: 0 15px 35px rgba(0, 240, 255, 0.05);
+            --chart-grid: rgba(255, 255, 255, 0.1);
+            --bar-bg: #222222;
+            --tag-bg: rgba(255,255,255,0.1);
+            --expanded-bg: #080808;
+        }
+
+        /* --- Light Theme Variables --- */
+        [data-theme="light"] {
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --border-dim: #cbd5e1;
+            --border-glow: rgba(2, 132, 199, 0.4);
+            --neon-blue: #0284c7; 
+            --neon-purple: #7e22ce; 
+            --text-primary: #0f172a; 
+            --text-secondary: #334155; 
+            --danger: #dc2626;
+            --success: #059669;
+            --warning: #d97706; 
+            --nav-bg: rgba(255, 255, 255, 0.95);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            --chart-grid: rgba(0, 0, 0, 0.1);
+            --bar-bg: #e2e8f0;
+            --tag-bg: #f1f5f9;
+            --expanded-bg: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            width: 100%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        h1, h2, h3, h4, h5, h6, .brand, .stat-value, .metric-val, .role-title, .data-tag-title {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* --- Custom Animated Cursor (Desktop Only) --- */
+        @media (pointer: fine) {
+            body { cursor: none; }
+            #cursor, #cursor-trail {
+                position: fixed; top: 0; left: 0;
+                pointer-events: none; border-radius: 50%;
+                z-index: 10000; transform: translate(-50%, -50%);
+            }
+            #cursor {
+                width: 8px; height: 8px; background: var(--neon-blue);
+                box-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-purple);
+                transition: background-color 0.2s ease;
+            }
+            #cursor-trail {
+                width: 32px; height: 32px;
+                border: 1.5px solid var(--neon-purple);
+                transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+            }
+        }
+
+        /* --- Scroll Animations --- */
+        .fade-up { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- Top Navigation --- */
+        nav {
+            position: fixed; top: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: var(--nav-bg); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-dim);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 5%; z-index: 1000;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .brand {
+            font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px;
+            color: var(--text-primary);
+        }
+        .brand span { background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .nav-right { display: flex; align-items: center; gap: 2.5rem; }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; font-weight: 600;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .theme-toggle {
+            background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-primary);
+            padding: 5px; transition: transform 0.2s;
+        }
+        .theme-toggle:hover { transform: scale(1.1); }
+        
+        .hamburger { display: none; font-size: 1.8rem; cursor: pointer; color: var(--text-primary); background: none; border: none;}
+
+        /* --- Sections Layout --- */
+        section { padding: 110px 5% 60px 5%; max-width: 1600px; margin: 0 auto; }
+        .section-header { margin-bottom: 3rem; }
+        .section-title { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 0.8rem; }
+        .section-subtitle { color: var(--text-secondary); font-size: 1.15rem; max-width: 800px; line-height: 1.6; }
+
+        /* --- Home / Hero Section --- */
+        #home { padding-top: 140px; min-height: 85vh; display: flex; flex-direction: column; justify-content: center; }
+        .hero-title { font-size: 4.5rem; font-weight: 800; letter-spacing: -2px; line-height: 1.1; margin-bottom: 1.5rem; }
+        .hero-title span { background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-desc { color: var(--text-secondary); font-size: 1.2rem; max-width: 650px; line-height: 1.7; font-weight: 500; }
+        
+        .hero-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 4rem; }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border-dim);
+            padding: 2rem; border-radius: 16px; position: relative; overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow); border-color: var(--neon-blue); }
+        .stat-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), transparent);
+        }
+        .stat-value { font-size: 2.2rem; font-weight: 700; margin: 0.8rem 0; color: var(--text-primary); letter-spacing: -1px; }
+        .stat-label { font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+
+        /* --- Global Grid Styles --- */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        .card-base { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 16px; padding: 2.5rem; transition: background-color 0.3s, border-color 0.3s; }
+
+        /* --- Weights Section --- */
+        .weights-explanation-card h3 { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--neon-blue); }
+        .weights-explanation-card p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 1.5rem; font-size: 1.05rem; }
+        
+        .weight-row { display: flex; align-items: center; margin-bottom: 1.2rem; }
+        .weight-row:last-child { margin-bottom: 0; }
+        .weight-label { width: 180px; font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+        .weight-bar-bg { flex: 1; height: 12px; background: var(--bar-bg); border-radius: 6px; overflow: hidden; margin: 0 1.5rem; position: relative; }
+        .weight-bar-fill { height: 100%; border-radius: 6px; transition: width 1.5s ease-out; }
+        .weight-value { width: 40px; text-align: right; font-weight: 700; color: var(--text-primary); font-size: 1.1rem; }
+
+        .weight-high .weight-bar-fill { background: linear-gradient(90deg, var(--neon-purple), var(--neon-blue)); }
+        .weight-med .weight-bar-fill { background: var(--neon-purple); opacity: 0.8; }
+        .weight-low .weight-bar-fill { background: var(--text-secondary); }
+        .weight-high .weight-value { color: var(--neon-blue); }
+
+        /* --- Methodology Section --- */
+        .methodology-card h3 { font-size: 1.6rem; margin-bottom: 1.5rem; color: var(--text-primary); }
+        .criteria-list { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .crit-item { background: var(--tag-bg); padding: 1.2rem; border-radius: 8px; border: 1px solid var(--border-dim); }
+        .crit-title { font-weight: 700; font-size: 1rem; color: var(--neon-blue); margin-bottom: 0.4rem; }
+        .crit-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+        .formula-box { background: var(--tag-bg); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--neon-purple); margin-bottom: 1.5rem; font-family: monospace; font-size: 1.05rem; }
+
+        /* --- Analytics Section --- */
+        .chart-grid-global { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .chart-grid-full { grid-template-columns: 1fr; }
+        .chart-box { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 16px; padding: 1.5rem; height: 450px; width: 100%; }
+
+        /* --- Roles Explorer Section --- */
+        .controls-bar {
+            display: flex; gap: 1rem; margin-bottom: 2.5rem; flex-wrap: wrap;
+            background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border-dim);
+        }
+        .control-group { flex: 1; min-width: 200px; }
+        .controls-bar input, .controls-bar select {
+            width: 100%; padding: 1rem 1.2rem; background: var(--bg-main);
+            border: 1px solid var(--border-dim); color: var(--text-primary);
+            border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 500; outline: none; transition: 0.3s;
+        }
+        .controls-bar input:focus, .controls-bar select:focus { border-color: var(--neon-blue); }
+
+        .roles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem; align-items: start; }
+        
+        .role-card {
+            background: var(--bg-card); border: 1px solid var(--border-dim);
+            border-radius: 16px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); overflow: hidden;
+            position: relative;
+        }
+        .role-card:hover { border-color: var(--border-glow); transform: translateY(-4px); box-shadow: var(--card-shadow); z-index: 10; }
+        .card-header-main { padding: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; cursor: pointer; }
+        .role-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-primary); }
+        .role-cat { font-size: 0.75rem; color: var(--neon-purple); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 0.5rem; }
+        
+        .role-meta-text { font-size: 0.95rem; color: var(--text-secondary); font-weight: 600; }
+        
+        .score-pill {
+            background: var(--tag-bg); color: var(--neon-blue);
+            padding: 0.4rem 0.8rem; border-radius: 20px; font-weight: 800; font-size: 1rem;
+            border: 1px solid var(--border-dim);
+        }
+        
+        /* Accordion Expansion */
+        .card-details {
+            max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out;
+            background: var(--expanded-bg); border-top: 1px solid transparent; opacity: 0;
+        }
+        .role-card.expanded { grid-column: span 1; border-color: var(--neon-blue); box-shadow: var(--card-shadow); }
+        .role-card.expanded .card-details { max-height: 3500px; border-top: 1px solid var(--border-dim); opacity: 1; }
+        
+        .details-inner { padding: 2rem; }
+        .role-desc-expanded { margin-bottom: 2.5rem; color: var(--text-secondary); line-height: 1.7; font-size: 1.05rem; font-weight: 500; }
+
+        .data-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .data-tag { background: var(--bg-card); border: 1px solid var(--border-dim); padding: 1.2rem; border-radius: 8px; }
+        .data-tag-title { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; font-weight: 700;}
+        .data-tag-val { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+
+        .justification-box { background: var(--tag-bg); border-left: 4px solid var(--neon-blue); padding: 1.5rem; border-radius: 0 8px 8px 0; margin-bottom: 2rem; }
+        .justification-box h4 { font-size: 0.95rem; color: var(--neon-blue); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 700;}
+        .justification-box p { color: var(--text-primary); font-weight: 500; line-height: 1.6; }
+
+        .criteria-bars-container { background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-dim); margin-bottom: 2rem;}
+        .criteria-bars-container h4 { font-size: 1.05rem; color: var(--neon-purple); text-transform: uppercase; margin-bottom: 1.5rem; letter-spacing: 1px; }
+        .crit-bar-row { display: flex; align-items: center; margin-bottom: 0.8rem; }
+        .crit-bar-label { width: 150px; font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
+        .crit-bar-track { flex: 1; height: 8px; background: var(--bar-bg); border-radius: 4px; margin: 0 10px; }
+        .crit-bar-fill { height: 100%; border-radius: 4px; }
+        .crit-bar-score { width: 35px; font-size: 1rem; font-weight: 700; text-align: right; }
+        
+        .card-chart-container { height: 280px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 12px; padding: 1rem; margin-bottom: 2rem;}
+        
+        .info-section { margin-bottom: 2rem; }
+        .info-section h4 { font-size: 1.05rem; color: var(--neon-blue); text-transform: uppercase; margin-bottom: 1rem; letter-spacing: 1px; font-family: 'Poppins', sans-serif;}
+        .info-section p { font-size: 1rem; line-height: 1.7; color: var(--text-primary); font-weight: 500;}
+        
+        .roadmap-list { list-style: none; padding-left: 10px; border-left: 2px solid var(--border-dim); }
+        .roadmap-list li { position: relative; padding-left: 20px; margin-bottom: 12px; font-size: 1rem; font-weight: 500; color: var(--text-primary); line-height: 1.6; }
+        .roadmap-list li::before {
+            content: ''; position: absolute; left: -16px; top: 8px;
+            width: 10px; height: 10px; border-radius: 50%; background: var(--neon-purple); border: 2px solid var(--bg-main);
+        }
+        .tag { display: inline-block; padding: 0.5rem 1rem; margin: 0 0.5rem 0.5rem 0; background: var(--tag-bg); border: 1px solid var(--border-dim); border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+
+        /* --- Sources & Redesigned Transparency Section --- */
+        .sources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;}
+        .source-card { background: var(--bg-card); border: 1px solid var(--border-dim); border-radius: 12px; padding: 1.8rem; transition: transform 0.3s; }
+        .source-card:hover { transform: translateY(-3px); border-color: var(--neon-purple); box-shadow: var(--card-shadow); }
+        .source-title { font-size: 1.15rem; color: var(--text-primary); font-weight: 700; margin-bottom: 0.5rem; }
+        .source-link { font-size: 0.9rem; font-weight: 600; color: var(--neon-blue); text-decoration: none; word-break: break-all; display: inline-block; margin-bottom: 1rem; }
+        .source-link:hover { text-decoration: underline; }
+        .source-desc { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; font-weight: 500;}
+        
+        .transparency-premium-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 3rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            box-shadow: var(--card-shadow);
+            align-items: center;
+        }
+        .transparency-header h3 {
+            color: var(--text-primary);
+            font-size: 1.8rem;
+            line-height: 1.3;
+            margin-bottom: 1rem;
+        }
+        .transparency-header p {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        .transparency-list { list-style: none; }
+        .transparency-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        .transparency-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--neon-blue);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 1024px) {
+            body { cursor: auto; }
+            #cursor, #cursor-trail { display: none !important; }
+            .grid-2, .transparency-premium-card { grid-template-columns: 1fr; gap: 2rem; }
+            .transparency-premium-card { padding: 2rem; }
+            .criteria-list { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            body { cursor: auto; }
+            #cursor, #cursor-trail { display: none !important; }
+            
+            section { padding: 90px 5% 40px 5%; }
+            .hero-title { font-size: 2.8rem; }
+            .section-title { font-size: 2rem; }
+            
+            /* Hamburger Nav */
+            .hamburger { display: block; }
+            .nav-links {
+                display: none; position: absolute; top: var(--nav-height); left: 0; width: 100%;
+                background: var(--nav-bg); flex-direction: column; padding: 1.5rem 5%;
+                border-bottom: 1px solid var(--border-dim); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                align-items: flex-start; gap: 1.5rem;
+            }
+            .nav-links.active { display: flex; }
+            
+            .chart-grid-global, .roles-grid, .sources-grid { grid-template-columns: 1fr; }
+            .chart-box { height: 350px; padding: 1rem; }
+            
+            .crit-bar-row, .weight-row { flex-direction: column; align-items: flex-start; }
+            .crit-bar-label, .weight-label { width: 100%; margin-bottom: 8px; }
+            .crit-bar-track, .weight-bar-bg { width: 100%; margin: 0 0 8px 0; }
+            .crit-bar-score, .weight-value { width: auto; text-align: left; }
+            .data-meta-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cursor -->
+    <div id="cursor"></div>
+    <div id="cursor-trail"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="brand">CI<span>.</span> Research</div>
+        <div class="nav-right">
+            <div class="nav-links" id="navLinks">
+                <a href="#home" onclick="closeMenu()">Overview</a>
+                <a href="#weights" onclick="closeMenu()">Weights</a>
+                <a href="#methodology" onclick="closeMenu()">Methodology</a>
+                <a href="#analytics" onclick="closeMenu()">Analytics</a>
+                <a href="#roles" onclick="closeMenu()">Role Explorer</a>
+                <a href="#sources" onclick="closeMenu()">Sources</a>
+            </div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle Theme">☀️</button>
+            <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home">
+        <h1 class="hero-title">The Future of <br><span>Computer Engineering</span>.</h1>
+        <p class="hero-desc">
+            A deeply researched, data-driven analysis of 100 engineering career paths. Evaluated strictly on logic, market indicators, and empirical vulnerability to automation over the next 15 years.
+        </p>
+
+        <div class="hero-stats">
+            <div class="stat-card">
+                <div class="stat-label">Analyzed Roles</div>
+                <div class="stat-value">100</div>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Across 7 tech domains</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Top Ranked Career</div>
+                <div class="stat-value text-blue" id="kpi-top" style="font-size: 1.6rem;">Loading Data...</div>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500; margin-top: 5px;">Empirically Lowest AI Risk</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Highest Risk Sector</div>
+                <div class="stat-value text-danger" style="font-size: 1.6rem;">Routine Web & QA</div>
+                <div style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500; margin-top: 5px;">Declining hiring velocity</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scoring System & Criteria Weights -->
+    <section id="weights" class="fade-up">
+        <div class="section-header">
+            <h2 class="section-title">Scoring System & Criteria Weights</h2>
+            <p class="section-subtitle">Understanding the mathematical foundation of our rankings. Weights are strictly allocated based on survival in an AI-driven economy.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card-base weights-explanation-card">
+                <h3>Strategic Prioritization</h3>
+                <p>
+                    The technology landscape is shifting rapidly. Empirical data shows routine programming and entry-level positions are facing unprecedented automation. Our scoring model heavily prioritizes careers that either build the automation or require profound physical-world context.
+                </p>
+                <p>
+                    <strong style="color: var(--text-primary);">High Impact Weights (x3):</strong> AI Resistance, Market Demand Growth, and Longevity are given maximum weight. A high salary is irrelevant if the role will be automated or obsolete within a decade.
+                </p>
+                <p>
+                    <strong style="color: var(--text-primary);">Medium Impact (x2):</strong> Compensation, Complexity, Innovation, and Competition levels provide the core assessment of the day-to-day career quality.
+                </p>
+            </div>
+
+            <div class="card-base weight-bars-container">
+                <div class="weight-row weight-high">
+                    <div class="weight-label">AI Resistance</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 100%;"></div></div>
+                    <div class="weight-value">3</div>
+                </div>
+                <div class="weight-row weight-high">
+                    <div class="weight-label">Market Demand Growth</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 100%;"></div></div>
+                    <div class="weight-value">3</div>
+                </div>
+                <div class="weight-row weight-high">
+                    <div class="weight-label">Longevity (10-20 yrs)</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 100%;"></div></div>
+                    <div class="weight-value">3</div>
+                </div>
+                <div class="weight-row weight-med">
+                    <div class="weight-label">Earning Potential</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 66.6%;"></div></div>
+                    <div class="weight-value">2</div>
+                </div>
+                <div class="weight-row weight-med">
+                    <div class="weight-label">Barrier to Entry</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 66.6%;"></div></div>
+                    <div class="weight-value">2</div>
+                </div>
+                <div class="weight-row weight-med">
+                    <div class="weight-label">Complexity / Skill Depth</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 66.6%;"></div></div>
+                    <div class="weight-value">2</div>
+                </div>
+                <div class="weight-row weight-med">
+                    <div class="weight-label">Innovation Potential</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 66.6%;"></div></div>
+                    <div class="weight-value">2</div>
+                </div>
+                <div class="weight-row weight-med">
+                    <div class="weight-label">Competition Level</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 66.6%;"></div></div>
+                    <div class="weight-value">2</div>
+                </div>
+                <div class="weight-row weight-low">
+                    <div class="weight-label">Global Opportunity</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 33.3%;"></div></div>
+                    <div class="weight-value">1</div>
+                </div>
+                <div class="weight-row weight-low">
+                    <div class="weight-label">Learning ROI</div>
+                    <div class="weight-bar-bg"><div class="weight-bar-fill" style="width: 33.3%;"></div></div>
+                    <div class="weight-value">1</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section id="methodology" class="fade-up">
+        <div class="section-header">
+            <h2 class="section-title">Methodology & Formulas</h2>
+            <p class="section-subtitle">How we transform structured logic and domain research into an objective, mathematical ranking.</p>
+        </div>
+
+        <div class="grid-2">
+            <div class="card-base methodology-card" style="grid-row: span 2;">
+                <h3>The 10 Core Criteria Definitions</h3>
+                <div class="criteria-list">
+                    <div class="crit-item">
+                        <div class="crit-title">AI Resistance</div>
+                        <div class="crit-desc">Ability to withstand automation by LLMs and autonomous coding agents.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Demand Growth</div>
+                        <div class="crit-desc">Projected global hiring volume increase based on industry trajectories.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Earning Potential</div>
+                        <div class="crit-desc">Global salary ceilings and compensation scaling.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Barrier to Entry</div>
+                        <div class="crit-desc">Difficulty of acquiring required skills (protects against market saturation).</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Complexity</div>
+                        <div class="crit-desc">Depth of architectural or systemic problem-solving required.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Global Opportunity</div>
+                        <div class="crit-desc">Ability to work remotely or cross-border without local restrictions.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Innovation Potential</div>
+                        <div class="crit-desc">Proximity to cutting-edge research and new tech paradigms.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Longevity</div>
+                        <div class="crit-desc">Expected lifespan of the core technologies before obsolescence.</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Competition Level</div>
+                        <div class="crit-desc">Volume of graduates competing for the same roles. (Reverse scored).</div>
+                    </div>
+                    <div class="crit-item">
+                        <div class="crit-title">Learning ROI</div>
+                        <div class="crit-desc">Financial and career return relative to the educational time invested.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-base methodology-card">
+                <h3>Calculation Formulas</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                    Each role is scored from 0 to 10 across all criteria. To calculate the final rankings, we apply two mathematical formulas. The Adjusted Score uses exponential weighting to severely punish roles that fail in critical areas like AI Resistance.
+                </p>
+                
+                <div class="formula-box">
+                    <div style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">Base Final Score:</div>
+                    <div style="color: var(--text-primary); font-weight: 600;">Score = SUM(value × weight) / SUM(weights)</div>
+                </div>
+                <div class="formula-box" style="border-left-color: var(--neon-blue); margin-bottom: 0;">
+                    <div style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 700; margin-bottom: 8px;">Adjusted Score (Exponential Weighting):</div>
+                    <div style="color: var(--text-primary); font-weight: 600;">Adj = SUM(value × weight^1.5) / SUM(weight^1.5)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="fade-up">
+        <div class="section-header">
+            <h2 class="section-title">Global Analytics</h2>
+            <p class="section-subtitle">Macro trends and comparative rankings calculated directly from the structural evaluation of all 100 roles.</p>
+        </div>
+
+        <div class="chart-grid-global">
+            <div class="chart-box"><canvas id="globalTop10"></canvas></div>
+            <div class="chart-box"><canvas id="globalBottom10"></canvas></div>
+        </div>
+        <div class="chart-grid-global chart-grid-full">
+            <div class="chart-box" style="height: 500px;"><canvas id="globalAllRank"></canvas></div>
+        </div>
+        <div class="chart-grid-global chart-grid-full">
+            <div class="chart-box" style="height: 400px;"><canvas id="globalAvgGrowth"></canvas></div>
+        </div>
+    </section>
+
+    <!-- Roles Explorer Section -->
+    <section id="roles" class="fade-up">
+        <div class="section-header">
+            <h2 class="section-title">Research Data Explorer</h2>
+            <p class="section-subtitle">Deep dive into the structural data assigned to all 100 career trajectories. Explore research justifications and long-term viability.</p>
+        </div>
+
+        <div class="controls-bar">
+            <div class="control-group">
+                <input type="text" id="searchInput" placeholder="Search roles, skills, or categories...">
+            </div>
+            <div class="control-group">
+                <select id="catFilter">
+                    <option value="All">All Domains</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <select id="sortFilter">
+                    <option value="adjScore">Sort by: Adjusted Score (Highest)</option>
+                    <option value="growth">Sort by: 10Yr Growth (Fastest)</option>
+                    <option value="aiRisk">Sort by: AI Risk (Safest to Riskiest)</option>
+                    <option value="aiRiskHigh">Sort by: AI Risk (Riskiest to Safest)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="roles-grid" id="rolesContainer">
+            <!-- Cards injected via JS -->
+        </div>
+    </section>
+
+    <!-- Research Sources Section -->
+    <section id="sources" class="fade-up">
+        <div class="section-header">
+            <h2 class="section-title">Data Citations & Sources</h2>
+            <p class="section-subtitle">All role scores were derived from aggregated, publicly available labor market research, automation risk studies, and compensation data.</p>
+        </div>
+        
+        <div class="sources-grid">
+            <div class="source-card">
+                <div class="source-title">U.S. Bureau of Labor Statistics (BLS)</div>
+                <a href="https://www.bls.gov/ooh/" target="_blank" class="source-link">bls.gov/ooh</a>
+                <div class="source-desc">Occupational Outlook Handbook: 10-year employment projections (2024-2034), wage data by occupation, education requirements, and industry growth trends. Primary source for Demand Growth and Earning Potential.</div>
+            </div>
+            <div class="source-card">
+                <div class="source-title">OECD Automation Risk Database</div>
+                <a href="https://www.oecd.org/employment/automation-risk.htm" target="_blank" class="source-link">oecd.org/employment</a>
+                <div class="source-desc">Probabilistic automation risk assessments for 500+ occupations. Used to calibrate AI Resistance scores based on task-level automatability research.</div>
+            </div>
+            <div class="source-card">
+                <div class="source-title">Stanford AI Index Report</div>
+                <a href="https://aiindex.stanford.edu/report/" target="_blank" class="source-link">aiindex.stanford.edu</a>
+                <div class="source-desc">Annual benchmarking of AI capabilities, adoption trends, and labor market impacts. Key source for AI Resistance scoring and innovation potential assessment.</div>
+            </div>
+            <div class="source-card">
+                <div class="source-title">LinkedIn Economic Graph</div>
+                <a href="https://economicgraph.linkedin.com/" target="_blank" class="source-link">economicgraph.linkedin.com</a>
+                <div class="source-desc">Real-time hiring velocity, skills demand, and career pathway data from 1B+ member profiles. Used for Market Demand Growth and Competition Level scoring.</div>
+            </div>
+            <div class="source-card">
+                <div class="source-title">Levels.fyi Compensation Database</div>
+                <a href="https://www.levels.fyi/" target="_blank" class="source-link">levels.fyi</a>
+                <div class="source-desc">Crowdsourced salary, equity, and total compensation data for tech roles across company levels and geographies. Primary source for Earning Potential scores.</div>
+            </div>
+            <div class="source-card">
+                <div class="source-title">World Economic Forum</div>
+                <a href="https://www.weforum.org/reports/the-future-of-jobs-report-2023/" target="_blank" class="source-link">weforum.org/reports</a>
+                <div class="source-desc">Future of Jobs Report: Global analysis of job creation/destruction trends, skills disruption, and emerging roles. Used to validate Demand Growth and Longevity scores.</div>
+            </div>
+        </div>
+        
+        <div class="transparency-premium-card">
+            <div class="transparency-header">
+                <h3>Scoring Transparency & Limitations</h3>
+                <p>While our methodology is rigorous and data-driven, macroeconomic forecasts inherently involve probability rather than absolute certainty. Understanding these constraints is vital for accurate career planning.</p>
+            </div>
+            <div class="transparency-content">
+                <ul class="transparency-list">
+                    <li>Scores represent research-based estimates (0-10 scale) aggregated from multiple global public sources.</li>
+                    <li>Individual role scores may vary ±0.5 points based on specific regional market conditions and sector.</li>
+                    <li>15-year projections are probabilistic assessments of current tech trajectories, subject to sudden breakthrough disruptions.</li>
+                    <li><strong style="color: var(--neon-blue);">Competition Level</strong> is reverse-scored: higher values indicate lower candidate saturation (better for the applicant).</li>
+                    <li><strong style="color: var(--neon-blue);">Exponential weighting</strong> intentionally amplifies penalties for roles with low AI Resistance or short Longevity.</li>
+                    <li>Triangulate these scores with personal aptitude and continuous skill adaptation planning.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- JS Execution Engine -->
+    <script>
+        let globalCharts = [];
+        const chartInstances = {};
+        
+        try {
+            // --- Theme Toggle Logic ---
+            const themeToggleBtn = document.getElementById('themeToggle');
+            let currentTheme = localStorage.getItem('theme') || 'dark';
+            
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                themeToggleBtn.innerText = theme === 'dark' ? '☀️' : '🌙';
+                localStorage.setItem('theme', theme);
+                
+                if (typeof Chart !== 'undefined') {
+                    // Update Chart Colors dynamically
+                    Chart.defaults.color = theme === 'dark' ? '#cbd5e1' : '#334155';
+                    Chart.defaults.borderColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+                    
+                    if(Chart.defaults.plugins && Chart.defaults.plugins.title) {
+                        Chart.defaults.plugins.title.color = theme === 'dark' ? '#ffffff' : '#0f172a';
+                    }
+                    
+                    // Force updates on existing chart instances to reflect new CSS variables
+                    for (let id in chartInstances) {
+                        if(chartInstances[id]) {
+                            const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim();
+                            const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+                            chartInstances[id].options.scales.x.grid.color = gridColor;
+                            chartInstances[id].options.scales.y.grid.color = gridColor;
+                            chartInstances[id].options.scales.x.ticks.color = textColor;
+                            chartInstances[id].options.scales.y.ticks.color = textColor;
+                            chartInstances[id].options.plugins.title.color = textColor;
+                            chartInstances[id].update();
+                        }
+                    }
+                    if(globalCharts && globalCharts.length > 0) {
+                        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim();
+                        const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+                        globalCharts.forEach(c => {
+                            if (c.options.scales.x) c.options.scales.x.grid.color = gridColor;
+                            if (c.options.scales.y) c.options.scales.y.grid.color = gridColor;
+                            if (c.options.scales.x) c.options.scales.x.ticks.color = textColor;
+                            if (c.options.scales.y) c.options.scales.y.ticks.color = textColor;
+                            c.options.plugins.title.color = textColor;
+                            c.update();
+                        });
+                    }
+                }
+            }
+            
+            applyTheme(currentTheme);
+            
+            themeToggleBtn.addEventListener('click', () => {
+                currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                applyTheme(currentTheme);
+            });
+
+            // --- Mobile Menu Logic ---
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            hamburger.addEventListener('click', () => {
+                navLinks.classList.toggle('active');
+            });
+            
+            window.closeMenu = function() {
+                if(window.innerWidth <= 768) {
+                    navLinks.classList.remove('active');
+                }
+            };
+
+            // --- Interactive Cursor (Delegated Event Listeners) ---
+            const cursor = document.getElementById('cursor');
+            const trail = document.getElementById('cursor-trail');
+            let mouseX = window.innerWidth/2, mouseY = window.innerHeight/2;
+            let trailX = window.innerWidth/2, trailY = window.innerHeight/2;
+            
+            if (window.innerWidth > 1024) {
+                document.addEventListener('mousemove', e => {
+                    mouseX = e.clientX; mouseY = e.clientY;
+                    if(cursor) {
+                        cursor.style.left = mouseX + 'px';
+                        cursor.style.top = mouseY + 'px';
+                    }
+                });
+                
+                function animateCursor() {
+                    trailX += (mouseX - trailX) * 0.15;
+                    trailY += (mouseY - trailY) * 0.15;
+                    if(trail) {
+                        trail.style.left = trailX + 'px';
+                        trail.style.top = trailY + 'px';
+                    }
+                    requestAnimationFrame(animateCursor);
+                }
+                animateCursor();
+
+                document.addEventListener('mouseover', (e) => {
+                    if (e.target.closest('a, button, select, input, .role-card, .card-header-main, .source-card')) {
+                        if(trail) {
+                            trail.style.transform = `translate(-50%, -50%) scale(1.5)`;
+                            trail.style.borderColor = 'var(--neon-blue)';
+                        }
+                        if(cursor) cursor.style.backgroundColor = 'var(--neon-purple)';
+                    }
+                });
+                
+                document.addEventListener('mouseout', (e) => {
+                    if (e.target.closest('a, button, select, input, .role-card, .card-header-main, .source-card')) {
+                        if(trail) {
+                            trail.style.transform = `translate(-50%, -50%) scale(1)`;
+                            trail.style.borderColor = 'var(--neon-purple)';
+                        }
+                        if(cursor) cursor.style.backgroundColor = 'var(--neon-blue)';
+                    }
+                });
+            }
+
+            // --- Core Raw Data from External Excel Document ---
+            const rawExcelData = [
+                [1, "AI Research Scientist", "AI/ML", 8.9, 9.3, 10, 9, 8, 9, 10, 9, 10, 9, 7, 7],
+                [2, "Quantum Computing Engineer", "Emerging", 8.5, 9.1, 10, 8, 7, 10, 10, 10, 10, 10, 6, 6],
+                [3, "Security Architect", "Cybersecurity", 8.4, 8.9, 9, 9, 9, 9, 8, 9, 7, 8, 8, 7],
+                [4, "Cryptography Engineer", "Cybersecurity", 8.3, 8.8, 10, 8, 9, 9, 9, 10, 9, 9, 7, 7],
+                [5, "Machine Learning Engineer", "AI/ML", 8.2, 8.7, 9, 10, 8, 9, 8, 8, 9, 7, 8, 8],
+                [6, "ASIC Design Engineer", "Hardware", 8.1, 8.6, 9, 8, 10, 9, 10, 10, 7, 8, 6, 7],
+                [7, "Robotics Engineer", "Embedded/Robotics", 8.0, 8.5, 9, 8, 9, 8, 9, 10, 8, 7, 7, 7],
+                [8, "SoC (System on Chip) Architect", "Hardware", 8.0, 8.5, 9, 8, 10, 9, 10, 10, 7, 8, 6, 7],
+                [9, "Chief Information Security Officer (CISO)", "Leadership", 7.9, 8.4, 9, 9, 9, 10, 9, 8, 7, 9, 8, 8],
+                [10, "AI Automation Specialist", "AI/ML", 7.8, 8.3, 8, 10, 7, 8, 7, 7, 8, 7, 9, 8],
+                [11, "Computer Vision Engineer", "AI/ML", 7.8, 8.3, 8, 9, 8, 9, 8, 9, 9, 7, 7, 7],
+                [12, "Natural Language Processing (NLP) Engineer", "AI/ML", 7.7, 8.2, 8, 9, 8, 9, 8, 8, 9, 7, 8, 7],
+                [13, "Director of AI/Data", "Leadership", 7.7, 8.2, 9, 9, 8, 10, 9, 8, 8, 8, 8, 8],
+                [14, "FPGA Engineer", "Hardware", 7.6, 8.1, 9, 7, 10, 9, 9, 10, 7, 8, 6, 7],
+                [15, "Autonomous Vehicle Engineer", "Embedded/Robotics", 7.6, 8.1, 8, 9, 8, 9, 9, 10, 9, 7, 7, 7],
+                [16, "Bioinformatics Engineer", "Emerging", 7.5, 8.0, 9, 8, 8, 8, 9, 9, 8, 8, 7, 7],
+                [17, "Vulnerability Researcher", "Cybersecurity", 7.5, 8.0, 9, 8, 8, 9, 9, 9, 9, 9, 7, 7],
+                [18, "MLOps Engineer", "AI/ML", 7.4, 7.9, 7, 10, 7, 9, 7, 8, 8, 7, 9, 8],
+                [19, "Cloud Security Engineer", "Cloud/Security", 7.4, 7.9, 8, 9, 8, 9, 8, 8, 7, 7, 9, 8],
+                [20, "Sensor Fusion Engineer", "Embedded/Robotics", 7.3, 7.8, 8, 8, 9, 8, 9, 10, 8, 8, 6, 7],
+                [21, "Hardware Verification Engineer", "Hardware", 7.3, 7.8, 8, 7, 10, 9, 9, 10, 6, 8, 6, 7],
+                [22, "Embedded Systems Engineer", "Embedded/Robotics", 7.2, 7.7, 8, 8, 9, 8, 8, 9, 7, 7, 7, 7],
+                [23, "Data Engineer", "AI/ML/Data", 7.2, 7.7, 7, 9, 7, 9, 7, 8, 7, 7, 9, 8],
+                [24, "Cloud Architect", "Cloud/Infra", 7.1, 7.6, 7, 9, 8, 9, 8, 9, 7, 7, 9, 8],
+                [25, "Penetration Tester (Ethical Hacker)", "Cybersecurity", 7.1, 7.6, 8, 9, 8, 9, 7, 8, 7, 7, 8, 7],
+                [26, "Site Reliability Engineer (SRE)", "Cloud/Infra", 7.0, 7.5, 7, 9, 7, 9, 7, 8, 7, 7, 9, 8],
+                [27, "Platform Engineer", "Cloud/Infra", 7.0, 7.5, 7, 9, 7, 9, 7, 8, 7, 7, 9, 8],
+                [28, "Application Security Engineer", "Cybersecurity", 7.0, 7.5, 8, 9, 8, 9, 7, 8, 7, 7, 9, 7],
+                [29, "Data Scientist", "AI/ML/Data", 6.9, 7.4, 6, 9, 7, 9, 7, 8, 8, 6, 9, 8],
+                [30, "DevOps Engineer", "Cloud/Infra", 6.9, 7.4, 6, 9, 7, 9, 7, 8, 7, 7, 9, 8],
+                [31, "Network Security Engineer", "Networking/Security", 6.9, 7.4, 8, 8, 8, 9, 7, 8, 7, 7, 8, 7],
+                [32, "IoT Firmware Engineer", "Embedded/Robotics", 6.8, 7.3, 7, 8, 9, 8, 8, 9, 7, 7, 7, 7],
+                [33, "Malware Analyst", "Cybersecurity", 6.8, 7.3, 8, 8, 8, 9, 8, 9, 8, 8, 7, 7],
+                [34, "Physical Design Engineer", "Hardware", 6.8, 7.3, 8, 7, 10, 9, 9, 10, 6, 8, 6, 7],
+                [35, "Analog/Mixed-Signal Engineer", "Hardware", 6.7, 7.2, 8, 7, 10, 9, 9, 10, 6, 8, 6, 7],
+                [36, "Industrial Automation Engineer", "Embedded/Robotics", 6.7, 7.2, 7, 8, 9, 8, 8, 9, 7, 7, 7, 7],
+                [37, "Serverless Architect", "Cloud/Infra", 6.7, 7.2, 6, 8, 7, 9, 8, 9, 7, 7, 9, 8],
+                [38, "Incident Responder", "Cybersecurity", 6.6, 7.1, 8, 9, 8, 9, 7, 8, 7, 7, 8, 7],
+                [39, "Information Security Analyst", "Cybersecurity", 6.6, 7.1, 7, 9, 8, 9, 7, 7, 7, 7, 8, 7],
+                [40, "Network Architect", "Networking", 6.6, 7.1, 7, 8, 9, 9, 8, 9, 7, 7, 7, 7],
+                [41, "Engine Programmer (Games)", "Gaming", 6.5, 7.0, 7, 7, 8, 9, 8, 10, 8, 8, 7, 7],
+                [42, "Graphics Programmer", "Gaming", 6.5, 7.0, 7, 7, 8, 9, 8, 10, 9, 8, 7, 7],
+                [43, "UAV/Drone Software Engineer", "Embedded/Robotics", 6.5, 7.0, 7, 8, 8, 8, 8, 9, 8, 8, 7, 7],
+                [44, "Forensic Computer Analyst", "Cybersecurity", 6.4, 6.9, 8, 7, 8, 8, 8, 9, 7, 8, 7, 7],
+                [45, "Signal Integrity Engineer", "Hardware", 6.4, 6.9, 8, 7, 10, 9, 9, 10, 6, 8, 6, 7],
+                [46, "Cloud Network Engineer", "Cloud/Networking", 6.4, 6.9, 7, 8, 8, 9, 7, 8, 7, 7, 9, 8],
+                [47, "Infrastructure as Code (IaC) Specialist", "Cloud/Infra", 6.3, 6.8, 6, 8, 7, 9, 7, 8, 7, 7, 9, 8],
+                [48, "Software Architect", "Web/App Dev", 6.3, 6.8, 6, 8, 8, 9, 8, 10, 7, 7, 9, 8],
+                [49, "Technical Program Manager (TPM)", "Leadership", 6.3, 6.8, 7, 8, 8, 9, 7, 8, 7, 7, 9, 8],
+                [50, "VP of Engineering", "Leadership", 6.2, 6.7, 7, 8, 8, 10, 9, 8, 7, 8, 8, 8],
+                [51, "Semiconductor Process Engineer", "Hardware", 6.2, 6.7, 8, 7, 10, 9, 10, 9, 6, 8, 6, 7],
+                [52, "Mechatronics Engineer", "Embedded/Robotics", 6.2, 6.7, 7, 7, 9, 8, 8, 9, 7, 7, 7, 7],
+                [53, "Wireless Communication Engineer", "Networking", 6.1, 6.6, 7, 7, 9, 8, 8, 9, 7, 7, 7, 7],
+                [54, "SDN (Software-Defined Networking) Engineer", "Networking", 6.1, 6.6, 6, 8, 8, 9, 7, 8, 8, 7, 8, 7],
+                [55, "Technical Founder / Startup Co-Founder", "Leadership", 6.1, 6.6, 6, 7, 6, 10, 6, 9, 9, 8, 9, 7],
+                [56, "Chief Technology Officer (CTO)", "Leadership", 6.0, 6.5, 7, 7, 7, 10, 9, 8, 7, 8, 8, 8],
+                [57, "Network Automation Engineer", "Networking", 6.0, 6.5, 5, 8, 8, 9, 7, 8, 8, 7, 8, 8],
+                [58, "Embedded Linux Engineer", "Embedded/Robotics", 6.0, 6.5, 6, 7, 9, 8, 8, 9, 7, 7, 7, 7],
+                [59, "Hardware-in-the-Loop (HIL) Test Engineer", "Embedded/Robotics", 5.9, 6.4, 7, 7, 9, 8, 8, 9, 7, 8, 6, 7],
+                [60, "Computer Hardware Engineer", "Hardware", 5.9, 6.4, 7, 6, 9, 8, 8, 9, 6, 7, 7, 7],
+                [61, "Technical Product Manager", "Leadership", 5.9, 6.4, 6, 8, 7, 9, 7, 8, 7, 7, 9, 8],
+                [62, "Engineering Manager", "Leadership", 5.8, 6.3, 6, 8, 7, 9, 8, 7, 6, 7, 9, 8],
+                [63, "Blockchain Developer", "Emerging", 5.8, 6.3, 6, 6, 6, 9, 7, 8, 8, 7, 9, 7],
+                [64, "Automotive Systems Engineer", "Embedded/Robotics", 5.8, 6.3, 6, 7, 9, 8, 8, 9, 7, 7, 7, 7],
+                [65, "Data Center Engineer", "Cloud/Infra", 5.7, 6.2, 6, 7, 9, 8, 7, 8, 6, 7, 8, 7],
+                [66, "Telecommunications Engineer", "Networking", 5.7, 6.2, 6, 6, 9, 8, 8, 8, 6, 7, 7, 7],
+                [67, "Satellite Communications Engineer", "Networking", 5.7, 6.2, 7, 6, 9, 8, 9, 9, 7, 8, 6, 7],
+                [68, "Performance Engineer", "Web/App Dev", 5.6, 6.1, 6, 7, 7, 9, 7, 8, 7, 7, 9, 8],
+                [69, "PCB Design Engineer", "Hardware", 5.6, 6.1, 7, 6, 10, 8, 8, 9, 6, 7, 6, 7],
+                [70, "AI Game Programmer", "Gaming", 5.6, 6.1, 5, 7, 7, 9, 7, 8, 8, 7, 8, 7],
+                [71, "VR/AR Developer", "Gaming", 5.5, 6.0, 5, 7, 7, 9, 7, 9, 9, 7, 8, 7],
+                [72, "Multiplayer/Network Programmer", "Gaming", 5.5, 6.0, 5, 7, 7, 9, 7, 9, 7, 7, 8, 7],
+                [73, "Enterprise Software Engineer", "Web/App Dev", 5.5, 6.0, 5, 7, 8, 9, 7, 8, 6, 7, 8, 8],
+                [74, "Back-End Engineer", "Web/App Dev", 5.4, 5.9, 5, 7, 7, 9, 6, 8, 6, 6, 9, 8],
+                [75, "API Developer", "Web/App Dev", 5.4, 5.9, 5, 7, 7, 9, 6, 7, 6, 6, 9, 8],
+                [76, "Technical Artist", "Gaming", 5.3, 5.8, 5, 7, 7, 8, 7, 9, 8, 7, 8, 7],
+                [77, "Full-Stack Web Developer", "Web/App Dev", 5.3, 5.8, 4, 7, 6, 9, 5, 7, 6, 5, 9, 8],
+                [78, "Mobile App Developer (iOS)", "Web/App Dev", 5.2, 5.7, 4, 6, 6, 9, 6, 7, 6, 6, 9, 8],
+                [79, "Mobile App Developer (Android)", "Web/App Dev", 5.2, 5.7, 4, 6, 6, 9, 6, 7, 6, 6, 9, 8],
+                [80, "Cross-Platform Mobile Developer", "Web/App Dev", 5.1, 5.6, 4, 6, 6, 8, 5, 7, 6, 5, 9, 8],
+                [81, "Game Programmer", "Gaming", 5.1, 5.6, 4, 6, 7, 8, 6, 8, 7, 6, 8, 7],
+                [82, "Gameplay Programmer", "Gaming", 5.0, 5.5, 4, 6, 7, 8, 6, 8, 7, 6, 8, 7],
+                [83, "Developer Advocate", "Leadership", 5.0, 5.5, 5, 6, 6, 8, 6, 7, 7, 7, 9, 8],
+                [84, "Accessibility Engineer", "Emerging", 5.0, 5.5, 6, 6, 8, 8, 7, 8, 7, 7, 9, 7],
+                [85, "Desktop Application Developer", "Web/App Dev", 4.9, 5.4, 4, 5, 6, 8, 6, 7, 5, 6, 8, 7],
+                [86, "UI Programmer (Games)", "Gaming", 4.9, 5.4, 4, 6, 6, 8, 6, 7, 6, 6, 8, 7],
+                [87, "Audio Programmer", "Gaming", 4.8, 5.3, 5, 5, 7, 8, 7, 8, 7, 7, 7, 7],
+                [88, "Scrum Master", "Leadership", 4.8, 5.3, 5, 6, 6, 7, 5, 6, 5, 6, 9, 8],
+                [89, "QA Automation Engineer", "Web/App Dev", 4.5, 4.9, 3, 6, 6, 8, 6, 7, 5, 5, 9, 8],
+                [90, "Robotic Process Automation (RPA) Developer", "AI/ML", 4.4, 4.8, 3, 5, 5, 8, 6, 7, 6, 6, 8, 7],
+                [91, "ERP Consultant", "Emerging", 4.3, 4.7, 4, 5, 7, 8, 6, 7, 4, 6, 8, 7],
+                [92, "Network Engineer", "Networking", 4.3, 4.7, 4, 6, 8, 8, 6, 7, 5, 6, 8, 7],
+                [93, "Sales Engineer", "Leadership", 4.2, 4.6, 4, 6, 7, 9, 5, 6, 5, 6, 8, 8],
+                [94, "Technical Writer", "Emerging", 4.1, 4.4, 3, 5, 7, 6, 5, 6, 5, 7, 9, 8],
+                [95, "AI Prompt Engineer", "AI/ML", 4.0, 4.3, 2, 6, 4, 8, 4, 6, 7, 5, 9, 8],
+                [96, "Front-End Engineer", "Web/App Dev", 3.9, 4.2, 3, 6, 5, 8, 5, 6, 5, 4, 9, 8],
+                [97, "VoIP Engineer", "Networking", 3.8, 4.1, 4, 4, 7, 7, 6, 7, 5, 6, 7, 7],
+                [98, "Release Manager", "Cloud/Infra", 3.7, 4.0, 3, 5, 6, 8, 6, 6, 5, 6, 8, 7],
+                [99, "Web Developer (Routine)", "Web/App Dev", 3.5, 3.7, 2, 4, 4, 7, 4, 5, 4, 3, 9, 7],
+                [100, "QA/Test Automation Engineer (Entry)", "Web/App Dev", 3.2, 3.4, 2, 4, 4, 6, 4, 5, 4, 4, 8, 7]
+            ];
+
+            const descMap = {
+                "AI Automation Specialist": { "skills": ["Python", "LLMs", "API Integration"], "desc": "Deploys autonomous AI agents to streamline business processes and handle workflows like sales." },
+                "Machine Learning Engineer": { "skills": ["TensorFlow", "PyTorch", "Python"], "desc": "Develops algorithms that allow systems to learn from data and recognize patterns." },
+                "Computer Vision Engineer": { "skills": ["OpenCV", "C++", "Deep Learning"], "desc": "Builds systems that process and analyze visual data from cameras and sensors." },
+                "Natural Language Processing (NLP) Engineer": { "skills": ["Transformers", "NLTK", "Python"], "desc": "Creates software that understands and generates human language." },
+                "Data Engineer": { "skills": ["SQL", "Apache Spark", "Kafka"], "desc": "Builds the infrastructure and pipelines to prepare massive datasets for AI training." },
+                "AI Research Scientist": { "skills": ["Mathematics", "Deep Learning"], "desc": "Conducts advanced research to push the boundaries of artificial intelligence capabilities." },
+                "MLOps Engineer": { "skills": ["Docker", "Kubernetes", "MLflow"], "desc": "Manages the deployment and scaling of machine learning models in production environments." },
+                "Data Scientist": { "skills": ["Python", "R", "Statistical Analysis"], "desc": "Analyzes complex data to extract actionable insights for business strategy." },
+                "Robotic Process Automation (RPA) Developer": { "skills": ["UiPath", "Automation Anywhere"], "desc": "Creates software bots to automate highly repetitive digital tasks." },
+                "AI Prompt Engineer": { "skills": ["Prompt Design", "LLM Architecture"], "desc": "Designs and refines inputs for large language models to optimize outputs." },
+                "Full-Stack Web Developer": { "skills": ["Next.js", "FastAPI", "Tailwind CSS"], "desc": "Handles both front-end UI and back-end server logic to build complete application MVPs." },
+                "Back-End Engineer": { "skills": ["Python", "Java", "Node.js"], "desc": "Designs the server-side logic and database architecture of applications." },
+                "Front-End Engineer": { "skills": ["React", "Vue", "HTML", "CSS"], "desc": "Creates the interactive visual elements of web applications." },
+                "Mobile App Developer (iOS)": { "skills": ["Swift", "Objective-C"], "desc": "Builds applications specifically for Apple mobile devices." },
+                "Mobile App Developer (Android)": { "skills": ["Kotlin", "Java"], "desc": "Builds applications specifically for Android mobile devices." },
+                "Cross-Platform Mobile Developer": { "skills": ["Flutter", "React Native"], "desc": "Creates mobile applications that work on both iOS and Android from a single codebase." },
+                "API Developer": { "skills": ["REST", "GraphQL", "Postman"], "desc": "Specializes in creating application programming interfaces for software integration." },
+                "Desktop Application Developer": { "skills": ["C#", "C++", "Electron"], "desc": "Builds software applications for Windows macOS or Linux environments." },
+                "Enterprise Software Engineer": { "skills": ["Java", "Spring Boot", "C#"], "desc": "Develops large-scale software systems for major corporate operations." },
+                "Software Architect": { "skills": ["System Design", "Microservices"], "desc": "Designs the high-level structure and technology stack of complex software systems." },
+                "Embedded Systems Engineer": { "skills": ["C", "C++", "ESP32", "Arduino"], "desc": "Programs the low-level logic for microcontrollers that power smart devices." },
+                "Robotics Engineer": { "skills": ["Sensor Integration", "Motor Drivers"], "desc": "Designs automated physical systems combining hardware and control software." },
+                "IoT Firmware Engineer": { "skills": ["MQTT", "C", "Wireless Protocols"], "desc": "Develops the code that allows physical devices to connect and communicate via the internet." },
+                "Mechatronics Engineer": { "skills": ["CAD", "Control Theory", "C++"], "desc": "Integrates mechanical electrical and computer engineering in product design." },
+                "Autonomous Vehicle Engineer": { "skills": ["ROS", "Computer Vision", "LiDAR"], "desc": "Develops the navigation and perception systems for self-driving cars and drones." },
+                "Embedded Linux Engineer": { "skills": ["Yocto", "Bash", "C"], "desc": "Customizes and optimizes Linux operating systems for embedded hardware." },
+                "Hardware-in-the-Loop (HIL) Test Engineer": { "skills": ["Simulink", "Python", "LabVIEW"], "desc": "Tests embedded control systems using mathematical models of the physical system." },
+                "Sensor Fusion Engineer": { "skills": ["Kalman Filters", "C++"], "desc": "Combines data from multiple sensors (IR cameras LiDAR) to create accurate environmental models." },
+                "Industrial Automation Engineer": { "skills": ["PLC Programming", "SCADA"], "desc": "Designs control systems for manufacturing plants and assembly lines." },
+                "UAV/Drone Software Engineer": { "skills": ["ArduPilot", "C++"], "desc": "Writes flight control and payload management software for uncrewed aerial vehicles." },
+                "Cloud Architect": { "skills": ["AWS", "Azure", "GCP"], "desc": "Designs the overall cloud computing strategy and infrastructure for organizations." },
+                "DevOps Engineer": { "skills": ["CI/CD", "Jenkins", "Terraform"], "desc": "Bridges development and operations to automate software delivery and infrastructure changes." },
+                "Site Reliability Engineer (SRE)": { "skills": ["Go", "Python", "Kubernetes"], "desc": "Applies software engineering practices to infrastructure and operations to ensure high system reliability." },
+                "Cloud Security Engineer": { "skills": ["IAM", "Encryption", "Cloud Architecture"], "desc": "Secures cloud-based platforms and applications against cyber threats." },
+                "Platform Engineer": { "skills": ["Docker", "Kubernetes", "Scripting"], "desc": "Builds internal toolchains and platforms to improve the productivity of software developers." },
+                "Serverless Architect": { "skills": ["AWS Lambda", "Serverless Framework"], "desc": "Designs applications that run on cloud infrastructure dynamically managed by the provider." },
+                "FinOps Engineer": { "skills": ["AWS Cost Explorer", "Data Analysis"], "desc": "Optimizes cloud computing costs and manages cloud financial operations." },
+                "Cloud Network Engineer": { "skills": ["VPC", "Routing", "Firewalls"], "desc": "Manages the virtual networks connecting cloud resources and on-premise systems." },
+                "Infrastructure as Code (IaC) Specialist": { "skills": ["Terraform", "Ansile", "Chef"], "desc": "Writes code to provision and manage IT infrastructure automatically." },
+                "Release Manager": { "skills": ["Agile", "Git", "CI/CD"], "desc": "Oversees the software release lifecycle and coordinates deployments." },
+                "Information Security Analyst": { "skills": ["SIEM", "Intrusion Detection"], "desc": "Monitors networks for security breaches and investigates violations." },
+                "Penetration Tester (Ethical Hacker)": { "skills": ["Kali Linux", "Metasploit"], "desc": "Simulates cyberattacks to identify vulnerabilities in systems before malicious hackers do." },
+                "Security Architect": { "skills": ["Network Security", "Cryptography"], "desc": "Designs robust security structures to protect an organization's computer systems." },
+                "Incident Responder": { "skills": ["Forensics", "Malware Analysis"], "desc": "Reacts to and manages the aftermath of a security breach or cyberattack." },
+                "Application Security Engineer": { "skills": ["SAST", "DAST", "Secure Coding"], "desc": "Integrates security testing and practices into the software development lifecycle." },
+                "Cryptography Engineer": { "skills": ["Mathematics", "C++", "Rust"], "desc": "Develops algorithms and systems to encrypt sensitive data." },
+                "Malware Analyst": { "skills": ["Assembly", "Debuggers", "Ghidra"], "desc": "Reverse-engineers malicious software to understand how it works and how to defend against it." },
+                "Identity and Access Management (IAM) Engineer": { "skills": ["OAuth", "SAML", "Active Directory"], "desc": "Manages user identities and regulates access to systems and data." },
+                "Vulnerability Researcher": { "skills": ["Reverse Engineering", "C"], "desc": "Discovers unknown flaws in software and hardware systems (Zero-days)." },
+                "Forensic Computer Analyst": { "skills": ["EnCase", "Digital Forensics"], "desc": "Investigates cybercrimes and extracts digital evidence for legal proceedings." },
+                "Computer Hardware Engineer": { "skills": ["Circuit Design", "PCB Layout"], "desc": "Designs and develops the physical components of computer systems." },
+                "ASIC Design Engineer": { "skills": ["Verilog", "VHDL", "SystemVerilog"], "desc": "Creates Application-Specific Integrated Circuits for specialized use cases." },
+                "FPGA Engineer": { "skills": ["VHDL", "Vivado", "Quartus"], "desc": "Programs Field-Programmable Gate Arrays for flexible hardware acceleration." },
+                "Hardware Verification Engineer": { "skills": ["UVM", "SystemVerilog"], "desc": "Tests and validates microchip designs before they are manufactured." },
+                "Physical Design Engineer": { "skills": ["EDA Tools", "CMOS"], "desc": "Converts logical chip designs into physical layouts for foundries." },
+                "Analog/Mixed-Signal Engineer": { "skills": ["SPICE", "Circuit Simulation"], "desc": "Designs circuits that process both continuous analog signals and digital data." },
+                "SoC (System on Chip) Architect": { "skills": ["Computer Architecture", "ARM"], "desc": "Designs complex chips that integrate an entire computer system onto a single die." },
+                "PCB Design Engineer": { "skills": ["Altium", "Eagle", "KiCad"], "desc": "Lays out the printed circuit boards that connect electronic components." },
+                "Signal Integrity Engineer": { "skills": ["Maxwell Equations", "HFSS"], "desc": "Ensures electrical signals travel cleanly and accurately across high-speed circuits." },
+                "Semiconductor Process Engineer": { "skills": ["Materials Science", "Lithography"], "desc": "Develops the manufacturing processes used to fabricate microchips." },
+                "Network Engineer": { "skills": ["Cisco", "Routing", "Switching"], "desc": "Designs and maintains physical and wireless computer networks." },
+                "Network Architect": { "skills": ["BGP", "OSPF", "Network Topologies"], "desc": "Plans the high-level design of large-scale enterprise networks or ISP infrastructures." },
+                "Telecommunications Engineer": { "skills": ["5G", "Fiber Optics", "VoIP"], "desc": "Develops systems for voice video and data communication over various mediums." },
+                "Wireless Communication Engineer": { "skills": ["RF Engineering", "802.11"], "desc": "Specializes in Wi-Fi cellular and RF networking technologies." },
+                "SDN (Software-Defined Networking) Engineer": { "skills": ["Python", "OpenFlow", "SDN Controllers"], "desc": "Manages network control through software applications rather than hardware." },
+                "Network Security Engineer": { "skills": ["Firewalls", "VPNs", "IPS"], "desc": "Focuses specifically on defending network boundaries from intrusion." },
+                "Data Center Engineer": { "skills": ["Hardware Management", "Cooling Systems"], "desc": "Manages the hardware network and power infrastructure within large data centers." },
+                "VoIP Engineer": { "skills": ["SIP", "PBX", "Asterisk"], "desc": "Designs and maintains Voice over IP communication systems." },
+                "Satellite Communications Engineer": { "skills": ["Orbital Mechanics", "RF"], "desc": "Develops networking solutions for orbital satellite systems." },
+                "Network Automation Engineer": { "skills": ["Python", "Ansible", "Netmiko"], "desc": "Writes scripts to automate the configuration and management of network devices." },
+                "Game Programmer": { "skills": ["C++", "C#", "Unity", "Unreal Engine"], "desc": "Writes the core code and logic for video games." },
+                "Engine Programmer (Games)": { "skills": ["Graphics APIs", "C++", "Math"], "desc": "Develops the foundational software engines that power video games." },
+                "Graphics Programmer": { "skills": ["OpenGL", "Vulkan", "DirectX"], "desc": "Writes rendering algorithms to create visual effects and 3D graphics." },
+                "VR/AR Developer": { "skills": ["Unity", "3D Math", "Spatial Computing"], "desc": "Creates immersive virtual and augmented reality experiences." },
+                "Gameplay Programmer": { "skills": ["Scripting", "Physics"], "desc": "Implements game mechanics player controls and interactive elements." },
+                "AI Game Programmer": { "skills": ["Pathfinding", "Behavior Trees"], "desc": "Develops the artificial intelligence for non-player characters (NPCs) and enemies." },
+                "Multiplayer/Network Programmer": { "skills": ["UDP", "Latency Compensation"], "desc": "Builds the networking infrastructure for seamless online multiplayer experiences." },
+                "UI Programmer (Games)": { "skills": ["UI/UX", "Scripting"], "desc": "Implements user interfaces menus and HUDs within game environments." },
+                "Technical Artist": { "skills": ["Python", "Maya", "Shaders"], "desc": "Acts as a bridge between art and programming writing scripts to optimize asset pipelines." },
+                "Audio Programmer": { "skills": ["FMOD", "Wwise", "DSP"], "desc": "Integrates and processes sound effects and music into the game engine." },
+                "Technical Founder / Startup Co-Founder": { "skills": ["Rapid Prototyping", "Leadership"], "desc": "Builds the initial tech architecture and business strategy for a new venture." },
+                "Chief Technology Officer (CTO)": { "skills": ["Executive Leadership", "Tech Strategy"], "desc": "Directs the overarching technological vision and strategy for a company." },
+                "Technical Product Manager": { "skills": ["Agile", "Market Research", "Tech Background"], "desc": "Bridges the gap between engineering and the market to guide product features." },
+                "Engineering Manager": { "skills": ["People Management", "SDLC"], "desc": "Leads and mentors teams of software or hardware engineers." },
+                "Scrum Master": { "skills": ["Agile", "Jira", "Communication"], "desc": "Facilitates agile development processes and removes blockers for the engineering team." },
+                "Developer Advocate": { "skills": ["Public Speaking", "Coding", "Content Creation"], "desc": "Engages with the developer community to promote technologies and gather feedback." },
+                "Technical Program Manager (TPM)": { "skills": ["Project Management", "System Architecture"], "desc": "Manages complex cross-functional engineering projects from inception to launch." },
+                "VP of Engineering": { "skills": ["Strategic Planning", "Budgeting"], "desc": "Oversees multiple engineering departments and scales technical operations." },
+                "Director of AI/Data": { "skills": ["Data Governance", "AI Strategy"], "desc": "Leads a company's data strategy and machine learning initiatives." },
+                "Chief Information Security Officer (CISO)": { "skills": ["Risk Management", "Compliance"], "desc": "Executive responsible for an organization's information and data security." },
+                "QA Automation Engineer": { "skills": ["Selenium", "Cypress", "Python"], "desc": "Writes code to automatically test software for bugs and performance issues." },
+                "Performance Engineer": { "skills": ["JMeter", "LoadRunner", "Profiling"], "desc": "Tests systems to ensure they can handle high loads and stress without crashing." },
+                "Blockchain Developer": { "skills": ["Solidity", "Rust", "Cryptography"], "desc": "Builds decentralized applications and smart contracts." },
+                "Quantum Computing Engineer": { "skills": ["Qiskit", "Quantum Mechanics"], "desc": "Develops algorithms and software for quantum computers." },
+                "Bioinformatics Engineer": { "skills": ["Python", "R", "Genetics"], "desc": "Develops software tools to analyze and interpret biological data." },
+                "Automotive Systems Engineer": { "skills": ["CAN bus", "C", "Automotive Standards"], "desc": "Designs electronic control units and software for modern vehicles." },
+                "Accessibility Engineer": { "skills": ["WCAG", "Screen Readers", "HTML"], "desc": "Ensures digital products are usable by individuals with disabilities." },
+                "Technical Writer": { "skills": ["Markdown", "Clear Writing", "Tech Knowledge"], "desc": "Translates complex technical concepts into clear documentation and manuals." },
+                "ERP Consultant": { "skills": ["SAP", "Oracle", "Business Processes"], "desc": "Implements and customizes Enterprise Resource Planning software for businesses." },
+                "Sales Engineer": { "skills": ["B2B Sales", "Tech Presentations", "Communication"], "desc": "Uses technical knowledge to explain and sell complex software/hardware to clients." },
+                "Web Developer (Routine)": { "skills": ["HTML", "CSS", "JavaScript"], "desc": "Develops and maintains basic routine web pages and CMS sites." },
+                "QA/Test Automation Engineer (Entry)": { "skills": ["Selenium", "Manual Testing"], "desc": "Performs routine manual and basic automated testing on web applications." }
+            };
+
+            const rolesData = rawExcelData.map(row => {
+                const roleName = row[1];
+                const meta = descMap[roleName] || { skills: ["Standard Tech Stack"], desc: "Professional engineering role within the specified domain." };
+                
+                const g10yr = 1.0 + ((row[6] - 6) * 0.1);
+                const growthRates = [1.0, g10yr * 0.9, g10yr, g10yr * 1.1];
+                
+                let jobRange, conf, color;
+                if (row[6] >= 9) { jobRange = "High (500K - 1M+ Global Jobs)"; conf = "High"; color = "var(--success)"; } 
+                else if (row[6] >= 7) { jobRange = "Medium (100K - 500K Global Jobs)"; conf = "High"; color = "var(--success)"; } 
+                else if (row[6] >= 5) { jobRange = "Low to Medium (50K - 100K Jobs)"; conf = "Medium"; color = "var(--warning)"; } 
+                else { jobRange = "Saturated / Declining"; conf = "High"; color = "var(--danger)"; }
+                
+                const aiRiskDesc = row[5] >= 8 ? "Highly resistant. Requires strategic oversight or complex physical interaction." : row[5] >= 6 ? "Moderate risk. Routine coding is assisted, but architecture remains human." : "Critical risk. Highly vulnerable to generative coding and automated design tools.";
+
+                return {
+                    id: row[0], category: row[2], title: roleName, skills: meta.skills, desc: meta.desc,
+                    scores: { aiResistance: row[5], demandGrowth: row[6], longevity: row[7], earning: row[8], barrier: row[9], complexity: row[10], innovation: row[11], competition: row[12], global: row[13], roi: row[14] },
+                    stdScore: row[3], adjScore: row[4], growthRates: growthRates, jobRange: jobRange, confidence: conf, confColor: color, aiRisk: parseFloat((10 - row[5]).toFixed(1)), aiRiskDesc: aiRiskDesc,
+                    edu: "BS in relevant technical field or equivalent experience.", justification: "Data derived directly from the supplied unified market research matrix."
+                };
+            });
+
+            // --- Render UI ---
+            const cats = [...new Set(rolesData.map(r => r.category))];
+            const catFilter = document.getElementById('catFilter');
+            cats.forEach(c => {
+                const opt = document.createElement('option'); opt.value = c; opt.innerText = c;
+                catFilter.appendChild(opt);
+            });
+
+            function initGlobalCharts() {
+                if (typeof Chart === 'undefined') return;
+                
+                globalCharts.forEach(c => c.destroy());
+                globalCharts = [];
+
+                const sortedByScore = [...rolesData].sort((a,b) => b.adjScore - a.adjScore);
+                
+                // Allow dynamic CSS variable fetching without hardcoded failure overrides
+                const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.1)';
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#fff';
+                const fontFam = "'Poppins', sans-serif";
+                
+                Chart.defaults.color = textColor;
+                Chart.defaults.borderColor = gridColor;
+
+                const top10 = new Chart(document.getElementById('globalTop10'), {
+                    type: 'line',
+                    data: {
+                        labels: sortedByScore.slice(0,10).map(d => d.title.split(' ')[0] + '...'),
+                        datasets: [{ label: 'Adjusted Score', data: sortedByScore.slice(0,10).map(d => d.adjScore), borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.15)', fill: true, tension: 0.3, pointBackgroundColor: '#fff', pointRadius: 5 }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { title: { display: true, text: 'Top 10 Roles Trajectory', font: {family: fontFam, size: 16, weight: '600'}, color: textColor }, legend: { display: false } }, 
+                        scales: { 
+                            y: { min: 6, grid: {color: gridColor}, ticks: {color: textColor} }, 
+                            x: { grid: {color: gridColor}, ticks: {color: textColor} } 
+                        }, 
+                        interaction: { mode: 'index', intersect: false } 
+                    }
+                });
+
+                const bottom10Data = sortedByScore.slice(-10).reverse();
+                const bottom10 = new Chart(document.getElementById('globalBottom10'), {
+                    type: 'line',
+                    data: {
+                        labels: bottom10Data.map(d => d.title.split(' ')[0] + '...'),
+                        datasets: [{ label: 'Adjusted Score', data: bottom10Data.map(d => d.adjScore), borderColor: '#ff4d4d', backgroundColor: 'rgba(255, 77, 77, 0.15)', fill: true, tension: 0.3, pointBackgroundColor: '#fff', pointRadius: 5 }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { title: { display: true, text: 'Bottom 10 Roles (High AI Risk)', font: {family: fontFam, size: 16, weight: '600'}, color: textColor }, legend: { display: false } }, 
+                        scales: { 
+                            y: { min: 3, grid: {color: gridColor}, ticks: {color: textColor} }, 
+                            x: { grid: {color: gridColor}, ticks: {color: textColor} } 
+                        }, 
+                        interaction: { mode: 'index', intersect: false } 
+                    }
+                });
+
+                const allRank = new Chart(document.getElementById('globalAllRank'), {
+                    type: 'line',
+                    data: {
+                        labels: sortedByScore.map((d, i) => `#${i+1}`),
+                        datasets: [{ label: 'Score Distribution', data: sortedByScore.map(d => d.adjScore), borderColor: '#c084fc', fill: true, backgroundColor: 'rgba(192, 132, 252, 0.12)', tension: 0.4 }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { title: { display: true, text: 'All 100 Roles Ranking Curve', font: {family: fontFam, size: 18, weight: '600'}, color: textColor }, legend: { display: false }, tooltip: { callbacks: { label: function(ctx){ return sortedByScore[ctx.dataIndex].title + ': ' + ctx.raw.toFixed(2); } } } }, 
+                        elements: { point: { radius: 0, hitRadius: 10, hoverRadius: 5 } }, 
+                        scales: { 
+                            y: { grid: {color: gridColor}, ticks: {color: textColor} }, 
+                            x: { display: false, grid: {color: gridColor}, ticks: {color: textColor} } 
+                        }, 
+                        interaction: { mode: 'index', intersect: false } 
+                    }
+                });
+
+                const yearLabels = ['Current', '5 Years', '10 Years', '15 Years'];
+                let avgGrowth = [1, 0, 0, 0];
+                rolesData.forEach(r => { avgGrowth[1] += r.growthRates[1]; avgGrowth[2] += r.growthRates[2]; avgGrowth[3] += r.growthRates[3]; });
+                avgGrowth = avgGrowth.map((v, i) => i === 0 ? 1 : v / rolesData.length);
+                
+                const avgGrowthChart = new Chart(document.getElementById('globalAvgGrowth'), {
+                    type: 'line',
+                    data: {
+                        labels: yearLabels,
+                        datasets: [{ label: 'Industry Average Multiplier', data: avgGrowth, borderColor: '#00ff66', backgroundColor: 'rgba(0, 255, 102, 0.12)', fill: true, tension: 0.3, pointBackgroundColor: '#fff', pointRadius: 6 }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { title: { display: true, text: 'Industry Average Job Growth Trajectory', font: {family: fontFam, size: 18, weight: '600'}, color: textColor }, legend: { display: false } }, 
+                        interaction: { mode: 'index', intersect: false }, 
+                        scales: { 
+                            y: { min: 0.8, grid: {color: gridColor}, ticks: {color: textColor} }, 
+                            x: { grid: {color: gridColor}, ticks: {color: textColor} } 
+                        } 
+                    }
+                });
+                
+                globalCharts.push(top10, bottom10, allRank, avgGrowthChart);
+                document.getElementById('kpi-top').innerText = sortedByScore[0].title;
+            }
+
+            const container = document.getElementById('rolesContainer');
+
+            function getColor(val) {
+                if(val >= 8) return 'var(--success)';
+                if(val >= 6) return 'var(--neon-blue)';
+                if(val >= 4) return 'var(--warning)';
+                return 'var(--danger)';
+            }
+
+            function createCriteriaBars(scores) {
+                const labels = [
+                    {k: 'aiResistance', n: 'AI Resistance'}, {k: 'demandGrowth', n: 'Market Demand'}, {k: 'earning', n: 'Earning Potential'},
+                    {k: 'barrier', n: 'Barrier to Entry'}, {k: 'complexity', n: 'Complexity'}, {k: 'global', n: 'Global Opp.'},
+                    {k: 'innovation', n: 'Innovation Potential'}, {k: 'longevity', n: 'Longevity'}, {k: 'competition', n: 'Competition (Inv)'},
+                    {k: 'roi', n: 'Learning ROI'}
+                ];
+                return labels.map(l => {
+                    const s = scores[l.k].toFixed(1);
+                    const color = getColor(scores[l.k]);
+                    return `<div class="crit-bar-row">
+                        <div class="crit-bar-label">${l.n}</div>
+                        <div class="crit-bar-track"><div class="crit-bar-fill" style="width: ${scores[l.k]*10}%; background-color: ${color};"></div></div>
+                        <div class="crit-bar-score" style="color: ${color};">${s}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            function renderCards(data) {
+                container.innerHTML = '';
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+
+                data.forEach((role) => {
+                    const card = document.createElement('div');
+                    card.className = 'role-card fade-up';
+                    card.id = `card-${role.id}`;
+                    const g10 = ((role.growthRates[2] - 1) * 100).toFixed(0);
+                    const gColor = g10 < 0 ? 'var(--danger)' : 'var(--success)';
+                    const rColor = role.aiRisk > 7 ? 'var(--danger)' : (role.aiRisk < 4 ? 'var(--success)' : 'var(--warning)');
+
+                    card.innerHTML = `
+                        <div class="card-header-main" onclick="toggleCard(${role.id})">
+                            <div>
+                                <div class="role-cat">${role.category}</div>
+                                <div class="role-title">${role.title}</div>
+                                <div style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">10Y Growth: <span style="color:${gColor}">${g10 > 0 ? '+'+g10 : g10}%</span> | AI Risk: <span style="color:${rColor}">${role.aiRisk}/10</span></div>
+                            </div>
+                            <div class="score-pill">${role.adjScore.toFixed(1)}</div>
+                        </div>
+                        <div class="card-details" id="details-${role.id}">
+                            <div class="details-inner">
+                                <p style="margin-bottom: 2.5rem; color: var(--text-secondary); line-height: 1.7; font-size: 1.05rem;">${role.desc}</p>
+                                <div class="data-meta-grid">
+                                    <div class="data-tag">
+                                        <div class="data-tag-title">Market Size Estimate</div>
+                                        <div class="data-tag-val" style="color: var(--neon-blue);">${role.jobRange}</div>
+                                    </div>
+                                    <div class="data-tag">
+                                        <div class="data-tag-title">Data Confidence Level</div>
+                                        <div class="data-tag-val" style="color: ${role.confColor};">${role.confidence}</div>
+                                    </div>
+                                </div>
+                                <div class="justification-box">
+                                    <h4>Research Justification</h4>
+                                    <p>${role.justification}</p>
+                                </div>
+                                <div class="criteria-bars-container">
+                                    <h4 style="font-size: 1rem; color: var(--neon-purple); text-transform: uppercase; margin-bottom: 1.5rem; letter-spacing: 1.5px; font-family: 'Poppins', sans-serif;">Criteria Breakdown</h4>
+                                    ${createCriteriaBars(role.scores)}
+                                </div>
+                                <div class="card-chart-container"><canvas id="chart-growth-${role.id}"></canvas></div>
+                                <div class="info-section">
+                                    <h4>AI Risk Analysis</h4>
+                                    <p>${role.aiRiskDesc}</p>
+                                </div>
+                                <div class="info-section">
+                                    <h4>Core Technologies</h4>
+                                    <div style="margin-top: 15px;">${role.skills.map(s => `<span class="tag">${s}</span>`).join('')}</div>
+                                </div>
+                                <div class="info-section">
+                                    <h4>Career Roadmap</h4>
+                                    <ul class="roadmap-list">
+                                        <li><strong style="color: var(--neon-blue);">Education:</strong> ${role.edu}</li>
+                                        <li><strong>Beginner:</strong> Master core languages and theoretical fundamentals. Build basic projects.</li>
+                                        <li><strong>Mid-Level:</strong> Focus on system architecture, cloud deployment, and complex problem solving.</li>
+                                        <li><strong>Senior/Advanced:</strong> Lead teams, design scalable enterprise architectures, or conduct advanced R&D.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                    observer.observe(card);
+                });
+            }
+
+            window.toggleCard = function(clickedId) {
+                const clickedCard = document.getElementById(`card-${clickedId}`);
+                const isExpanding = !clickedCard.classList.contains('expanded');
+                
+                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('expanded'));
+
+                if (isExpanding) {
+                    const targetTop = clickedCard.offsetTop;
+                    document.querySelectorAll('.role-card').forEach(c => {
+                        if (Math.abs(c.offsetTop - targetTop) < 50) {
+                            c.classList.add('expanded');
+                            const cardId = parseInt(c.id.split('-')[1]);
+                            initCardCharts(cardId);
+                        }
+                    });
+                    
+                    setTimeout(() => {
+                        const y = clickedCard.getBoundingClientRect().top + window.scrollY - 100;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                    }, 300);
+                }
+            };
+
+            function initCardCharts(id) {
+                if (typeof Chart === 'undefined') return;
+                const role = rolesData.find(r => r.id === id);
+                
+                const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--chart-grid').trim() || 'rgba(255,255,255,0.1)';
+                const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#fff';
+                
+                if (chartInstances[`growth-${id}`]) {
+                    chartInstances[`growth-${id}`].destroy();
+                }
+                
+                const ctxG = document.getElementById(`chart-growth-${id}`).getContext('2d');
+                chartInstances[`growth-${id}`] = new Chart(ctxG, {
+                    type: 'line',
+                    data: {
+                        labels: ['Now', '5 Yr', '10 Yr', '15 Yr'],
+                        datasets: [{
+                            label: 'Job Volume Multiplier',
+                            data: [1, role.growthRates[1], role.growthRates[2], role.growthRates[3]],
+                            borderColor: '#00f0ff', backgroundColor: 'rgba(0, 240, 255, 0.15)', fill: true, tension: 0.3,
+                            pointBackgroundColor: '#fff', pointRadius: 5
+                        }]
+                    },
+                    options: { 
+                        responsive: true, maintainAspectRatio: false, 
+                        plugins: { legend: { display: false }, title: {display: true, text: '15-Year Structural Growth Projection', color: textColor, font: {family: "'Poppins', sans-serif", size: 15, weight: '500'}} }, 
+                        scales: { 
+                            y: { min: 0, grid: {color: gridColor}, ticks: {color: textColor} }, 
+                            x: { grid: {color: gridColor}, ticks: {color: textColor} } 
+                        },
+                        interaction: { mode: 'index', intersect: false }
+                    }
+                });
+            }
+
+            function updateView() {
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const cat = document.getElementById('catFilter').value;
+                const sort = document.getElementById('sortFilter').value;
+
+                let filtered = rolesData.filter(r => {
+                    const matchSearch = r.title.toLowerCase().includes(search) || r.skills.some(s=>s.toLowerCase().includes(search));
+                    const matchCat = cat === 'All' || r.category === cat;
+                    return matchSearch && matchCat;
+                });
+
+                filtered.sort((a, b) => {
+                    if(sort === 'adjScore') return b.adjScore - a.adjScore;
+                    if(sort === 'growth') return b.growthRates[2] - a.growthRates[2];
+                    if(sort === 'aiRisk') return a.aiRisk - b.aiRisk;
+                    if(sort === 'aiRiskHigh') return b.aiRisk - a.aiRisk;
+                });
+
+                renderCards(filtered);
+            }
+
+            document.getElementById('searchInput').addEventListener('input', updateView);
+            document.getElementById('catFilter').addEventListener('change', updateView);
+            document.getElementById('sortFilter').addEventListener('change', updateView);
+
+            // Render everything initially
+            updateView();
+            
+            // Timeout to ensure styles load before drawing charts
+            setTimeout(() => {
+                initGlobalCharts();
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('visible');
+                        }
+                    });
+                }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+                document.querySelectorAll('section.fade-up').forEach(el => observer.observe(el));
+            }, 100);
+
+        } catch (error) {
+            console.error("Initialization Error", error);
+            document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));
+        }
+    </script>
+</body>
+</html>
